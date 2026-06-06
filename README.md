@@ -19,7 +19,7 @@ The system captures facial images from visitor groups at Parco Nazionale della S
  │                                                                             │
  │  ┌──────────────────────┐                                                   │
  │  │  Raspberry Pi 4       │  JPEG frame (REST/HTTPS)                        │
- │  │  Camera Module v2     │ ──────────────────────────────────────────────► │
+ │  │  USB camera           │ ──────────────────────────────────────────────► │
  │  │  (capture + compress) │                                                  │
  │  └──────────────────────┘                                                   │
  └─────────────────────────────────────────────────────────────────────────────┘
@@ -38,9 +38,9 @@ The system captures facial images from visitor groups at Parco Nazionale della S
  │                           │  EC2 g4dn.xlarge                              │ │
  │                           │  NVIDIA Tesla T4 — 16 GB VRAM                 │ │
  │                           │  VLM inference:                               │ │
- │                           │    • PaliGemma 2 3B  (Gianluca)               │ │
- │                           │    • MiniCPM-V 2.6   (Orazio)                 │ │
- │                           │    • Moondream2       (Asrar)                 │ │
+ │                           │    • PaliGemma 2 3B                           │ │
+ │                           │    • MiniCPM-V 2.6                            │ │
+ │                           │    • Moondream2                               │ │
  │                           └───────────────────┬───────────────────────────┘ │
  │                                               │                             │
  │                    ┌──────────────────────────┴──────────────────────────┐  │
@@ -65,10 +65,10 @@ The system captures facial images from visitor groups at Parco Nazionale della S
 
 | Name | Student ID | Contribution |
 |------|------------|--------------|
-| Gianluca Perrotta | 277091 | PaliGemma 2 — evaluation, fine-tuning attempts, distress grouping |
-| Marco Macrì | 276608 | System architecture, AWS infrastructure, Flutter app |
-| Orazio Ruberto | 276576 | MiniCPM-V — QLoRA fine-tuning & evaluation |
-| Asrar Jemal Mohammed | 284598 | Moondream2 — evaluation |
+| Gianluca Perrotta | 277091 | PaliGemma 2 — fine-tuning & evaluation, system architecture, AWS infrastructure, Flutter app |
+| Marco Macrì | 276608 | Moondream2 — fine-tuning & evaluation, system architecture, AWS infrastructure, Flutter app |
+| Orazio Ruberto | 276576 | MiniCPM-V — fine-tuning & evaluation, system architecture, AWS infrastructure, Flutter app |
+| Asrar Jemal Mohammed | 284598 | Edge integration — Raspberry Pi 4, USB camera, frame capture & transmission to cloud |
 
 ---
 
