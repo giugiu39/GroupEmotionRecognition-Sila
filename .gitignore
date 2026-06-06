@@ -1,0 +1,49 @@
+# Large image dataset — do not commit (too large for git)
+images/
+
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+
+# Virtual environments
+.env
+.env.*
+*.env
+venv/
+.venv/
+
+# Model checkpoints and large weight files
+checkpoint-*/
+**/checkpoint-*/
+*.bin
+*.safetensors
+*.pt
+*.pth
+
+# Training outputs (auto-generated, derive from scripts)
+training_summary.json
+test_metrics*.json
+test_predictions*.jsonl
+*.partial.json
+
+# OS
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Jupyter
+.ipynb_checkpoints/
+
+# Logs and experiment tracking
+*.log
+wandb/
+runs/
+mlruns/
