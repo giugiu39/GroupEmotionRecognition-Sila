@@ -79,9 +79,9 @@ The system captures facial images from visitor groups at Parco Nazionale della S
 ├── README.md
 ├── .gitignore
 ├── vlm/
-│   ├── paligemma2/     # PaliGemma 2 3B — eval & fine-tuning scripts (Gianluca)
-│   ├── minicpmv/       # MiniCPM-V 2.6 — fine-tuning & eval (Orazio)
-│   └── moondream2/     # Moondream2 — evaluation (Asrar)
+│   ├── paligemma2/     # PaliGemma 2 3B — fine-tuning & evaluation
+│   ├── minicpmv/       # MiniCPM-V 2.6 — fine-tuning & evaluation
+│   └── moondream2/     # Moondream2 — fine-tuning & evaluation
 ├── dataset/            # FER+ JSONL builders and dataset split files
 ├── edge/               # Raspberry Pi 4 capture script
 ├── cloud/              # AWS Lambda function
