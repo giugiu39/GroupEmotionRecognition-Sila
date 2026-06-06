@@ -1,6 +1,6 @@
 # Smart Emotion Recognition System — Parco Nazionale della Sila
 
-Academic project for the joint course **Distributed Systems, Cloud and Edge Computing** + **IoT Systems**  
+Academic project for the joint course **IoT Device Programming** + **Distributed Systems, Cloud and Edge Computing**  
 University of Calabria (UNICAL) — A.Y. 2025/2026
 
 ---
@@ -175,6 +175,6 @@ For dataset preparation: [`dataset/`](dataset/)
 ## Academic Context
 
 - **University:** University of Calabria (UNICAL)
-- **Courses:** Distributed Systems, Cloud and Edge Computing + IoT Systems
+- **Courses:** IoT Device Programming + Distributed Systems, Cloud and Edge Computing
 - **Academic Year:** 2025/2026
 - **Report:** [`docs/GER_Report_final.docx`](docs/GER_Report_final.docx)
