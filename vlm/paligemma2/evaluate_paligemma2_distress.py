@@ -1,10 +1,5 @@
 #!/usr/bin/env python3
 """
-Evaluate PaliGemma 2 BASE model (no LoRA adapter) on the FERPlus test set.
-Same structure as evaluate_paligemma2_FineTuning.py but loads the base model
-directly without any adapter — useful when the base model is already strong
-enough on the task (as observed with PaliGemma 2 on FER+).
-
 Usage:
   python3 evaluate_paligemma2_base.py \
     --test_json  /workspace/datasets/jsonl/test.jsonl \
@@ -37,9 +32,7 @@ from transformers import (
 )
 
 
-# ─────────────────────────────────────────────────────────────────────────────
-# CONSTANTS
-# ─────────────────────────────────────────────────────────────────────────────
+# constants
 
 DEFAULT_MODEL_ID = "google/paligemma2-3b-mix-224"
 DEFAULT_EMOTIONS = (
@@ -47,9 +40,7 @@ DEFAULT_EMOTIONS = (
 )
 
 
-# ─────────────────────────────────────────────────────────────────────────────
 # CLI
-# ─────────────────────────────────────────────────────────────────────────────
 
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(
@@ -74,9 +65,7 @@ def parse_args() -> argparse.Namespace:
     return parser.parse_args()
 
 
-# ─────────────────────────────────────────────────────────────────────────────
-# DATA HELPERS
-# ─────────────────────────────────────────────────────────────────────────────
+# data helpers
 
 def normalize_emotion(value: str) -> str:
     return value.strip().lower().replace(" ", "_")
@@ -142,9 +131,7 @@ def validate_test_records(
     return out
 
 
-# ─────────────────────────────────────────────────────────────────────────────
-# PROMPT  (identical to training scripts for consistency)
-# ─────────────────────────────────────────────────────────────────────────────
+# prompt
 
 def build_prompt(emotion_labels: Sequence[str], schema: str) -> str:
     """
@@ -160,9 +147,7 @@ def build_prompt(emotion_labels: Sequence[str], schema: str) -> str:
     )
 
 
-# ─────────────────────────────────────────────────────────────────────────────
-# MODEL LOADING  (base model, no adapter)
-# ─────────────────────────────────────────────────────────────────────────────
+# model loading
 
 def load_model_and_processor(args: argparse.Namespace) -> Tuple[Any, Any]:
     """Load PaliGemma 2 base in 4-bit — no LoRA adapter."""
@@ -189,9 +174,7 @@ def load_model_and_processor(args: argparse.Namespace) -> Tuple[Any, Any]:
     return model, processor
 
 
-# ─────────────────────────────────────────────────────────────────────────────
-# INFERENCE
-# ─────────────────────────────────────────────────────────────────────────────
+# inference
 
 @torch.inference_mode()
 def predict_one(
@@ -238,9 +221,7 @@ def predict_one(
     return decoded[0].strip() if decoded else ""
 
 
-# ─────────────────────────────────────────────────────────────────────────────
-# PARSING MODEL OUTPUT
-# ─────────────────────────────────────────────────────────────────────────────
+# parse model output
 
 def extract_json_object(text: str) -> Optional[Dict[str, Any]]:
     stripped = text.strip()
@@ -283,7 +264,7 @@ def parse_predicted_emotion(
     """
     allowed_set = {normalize_emotion(e) for e in allowed}
 
-    # ── Step 1: try JSON parsing ──
+    # try JSON
     parsed = extract_json_object(raw_text)
     info: Dict[str, Any] = {
         "parsed_json": parsed,
@@ -316,8 +297,7 @@ def parse_predicted_emotion(
             info["parse_status"] = "label_not_allowed"
             info["raw_label"] = norm
 
-    # ── Step 2: plain word response (e.g. PaliGemma 2 base returns "happiness") ──
-    # Check if the entire stripped response is a known emotion word
+    # base model sometimes returns a plain word instead of JSON
     stripped = normalize_emotion(raw_text.strip())
     if stripped in allowed_set:
         info["parse_status"] = "plain_word_label"
@@ -327,7 +307,7 @@ def parse_predicted_emotion(
         }
         return stripped, info
 
-    # ── Step 3: scan raw text for exactly one known emotion word ──
+    # fallback: scan raw text for known emotions
     raw_lower = normalize_emotion(raw_text)
     found = [e for e in allowed_set if re.search(rf"\b{re.escape(e)}\b", raw_lower)]
     if len(found) == 1:
@@ -341,9 +321,7 @@ def parse_predicted_emotion(
     return None, info
 
 
-# ─────────────────────────────────────────────────────────────────────────────
-# METRICS
-# ─────────────────────────────────────────────────────────────────────────────
+# metrics
 
 def safe_div(num: float, den: float) -> float:
     return num / den if den else 0.0
@@ -443,9 +421,7 @@ def compute_metrics(
     }
 
 
-# ─────────────────────────────────────────────────────────────────────────────
-# CHECKPOINT HELPERS
-# ─────────────────────────────────────────────────────────────────────────────
+# checkpoint helpers
 
 def add_suffix(path: str | Path, suffix: str) -> Path:
     path = Path(path)
@@ -532,9 +508,7 @@ def append_prediction_checkpoint(path: Path, item: Dict[str, Any]) -> None:
         os.fsync(f.fileno())
 
 
-# ─────────────────────────────────────────────────────────────────────────────
-# REPORT
-# ─────────────────────────────────────────────────────────────────────────────
+# report
 
 def build_report(
     predictions: Sequence[Dict[str, Any]],
@@ -581,9 +555,7 @@ def save_predictions_jsonl(path: Path, predictions: Sequence[Dict[str, Any]]) ->
             f.write(json.dumps(item, ensure_ascii=True) + "\n")
 
 
-# ─────────────────────────────────────────────────────────────────────────────
-# MAIN
-# ─────────────────────────────────────────────────────────────────────────────
+# main
 
 def main() -> None:
     args = parse_args()

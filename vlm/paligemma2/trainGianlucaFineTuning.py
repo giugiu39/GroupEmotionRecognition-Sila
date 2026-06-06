@@ -61,9 +61,7 @@ from transformers import (
 from peft import LoraConfig, get_peft_model, prepare_model_for_kbit_training, TaskType
 
 
-# ─────────────────────────────────────────────────────────────────────────────
-# CONSTANTS
-# ─────────────────────────────────────────────────────────────────────────────
+# constants
 
 DEFAULT_MODEL_ID = "google/paligemma2-3b-mix-224"
 DEFAULT_EMOTIONS = (
@@ -72,9 +70,7 @@ DEFAULT_EMOTIONS = (
 )
 
 
-# ─────────────────────────────────────────────────────────────────────────────
-# CLI  (mirrors Orazio's argument structure)
-# ─────────────────────────────────────────────────────────────────────────────
+# CLI
 
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(
@@ -105,7 +101,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--max_length", type=int, default=512)
     parser.add_argument("--target_answer_max_length", type=int, default=64)
 
-    # Training hyperparameters — defaults match Orazio's successful run
+    # training hyperparameters
     parser.add_argument("--num_train_epochs", type=float, default=2.0)
     parser.add_argument("--max_steps", type=int, default=-1)
     parser.add_argument("--per_device_train_batch_size", type=int, default=1)
@@ -119,12 +115,12 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--save_steps", type=int, default=200)
     parser.add_argument("--eval_steps", type=int, default=200)
 
-    # LoRA — Orazio used r=4, alpha=8 successfully
+    # LoRA
     parser.add_argument("--lora_r", type=int, default=4)
     parser.add_argument("--lora_alpha", type=int, default=8)
     parser.add_argument("--lora_dropout", type=float, default=0.05)
 
-    # Guardrails (mirrors Orazio's script)
+    # guardrails
     parser.add_argument("--stop_on_nan_loss", action=argparse.BooleanOptionalAction, default=True)
     parser.add_argument("--loss_guard_min_logs", type=int, default=3)
     parser.add_argument("--loss_explosion_factor", type=float, default=3.0)
@@ -145,9 +141,7 @@ def parse_args() -> argparse.Namespace:
     return parser.parse_args()
 
 
-# ─────────────────────────────────────────────────────────────────────────────
-# DATA HELPERS
-# ─────────────────────────────────────────────────────────────────────────────
+# data helpers
 
 def normalize_emotion(value: str) -> str:
     return value.strip().lower().replace(" ", "_")
@@ -218,7 +212,7 @@ def stratified_sample(
     fraction: float,
     seed: int,
 ) -> List[Dict[str, Any]]:
-    """Keep fraction from each class independently — same as Orazio's approach."""
+    """Keep a fraction from each class independently."""
     if not 0 < fraction <= 1:
         raise ValueError("sample_fraction must be in (0, 1].")
     rng = random.Random(seed)
@@ -259,9 +253,7 @@ def stratified_train_eval_split(
     return train_recs, eval_recs
 
 
-# ─────────────────────────────────────────────────────────────────────────────
-# PROMPT & TARGET  (identical to evaluate_paligemma2.py for consistency)
-# ─────────────────────────────────────────────────────────────────────────────
+# prompt and target
 
 def build_prompt(emotion_labels: Sequence[str], schema: str) -> str:
     labels = ", ".join(emotion_labels)
@@ -293,9 +285,7 @@ def build_target(emotion: str, schema: str) -> str:
     return json.dumps(payload, ensure_ascii=True, separators=(",", ":"))
 
 
-# ─────────────────────────────────────────────────────────────────────────────
-# DATASET
-# ─────────────────────────────────────────────────────────────────────────────
+# dataset
 
 class FERPlusDataset(Dataset):
     def __init__(
@@ -318,9 +308,7 @@ class FERPlusDataset(Dataset):
         return {"image": image, "prompt": self.prompt, "answer": answer}
 
 
-# ─────────────────────────────────────────────────────────────────────────────
-# COLLATOR
-# ─────────────────────────────────────────────────────────────────────────────
+# collator
 
 class PaliGemmaCollator:
     """
@@ -390,9 +378,7 @@ class PaliGemmaCollator:
         }
 
 
-# ─────────────────────────────────────────────────────────────────────────────
-# GUARDRAIL CALLBACK  (adapted from Orazio's LossDivergenceGuardrailCallback)
-# ─────────────────────────────────────────────────────────────────────────────
+# guardrail callback
 
 class GuardrailTrainingStop(RuntimeError):
     pass
@@ -568,9 +554,7 @@ class GuardedTrainer(Trainer):
         return loss
 
 
-# ─────────────────────────────────────────────────────────────────────────────
-# MODEL LOADING
-# ─────────────────────────────────────────────────────────────────────────────
+# model loading
 
 def load_model_and_processor(args: argparse.Namespace) -> Tuple[Any, Any]:
     print(f"\nCarico modello: {args.model_id}")
@@ -623,9 +607,7 @@ def setup_lora(model: Any, args: argparse.Namespace) -> Any:
     return model
 
 
-# ─────────────────────────────────────────────────────────────────────────────
-# UTILS
-# ─────────────────────────────────────────────────────────────────────────────
+# utils
 
 def make_json_safe(value: Any) -> Any:
     if isinstance(value, Path):
@@ -661,9 +643,7 @@ def resolve_eval_save_steps(
     return eff_eval, eff_save, total
 
 
-# ─────────────────────────────────────────────────────────────────────────────
-# MAIN
-# ─────────────────────────────────────────────────────────────────────────────
+# main
 
 def main() -> None:
     args = parse_args()
@@ -673,7 +653,7 @@ def main() -> None:
     emotion_labels = [normalize_emotion(e) for e in args.emotion_labels.split(",") if e.strip()]
     prompt = build_prompt(emotion_labels, args.target_schema)
 
-    # ── Dataset ──
+    # dataset
     print("\nCarico training set...")
     raw_train = read_json_or_jsonl(args.train_json)
     train_recs = validate_and_annotate(raw_train, emotion_labels)
@@ -693,7 +673,7 @@ def main() -> None:
     train_dataset = FERPlusDataset(train_recs, prompt, args.target_schema)
     eval_dataset  = FERPlusDataset(eval_recs, prompt, args.target_schema) if eval_recs else None
 
-    # ── Model ──
+    # model
     model, processor = load_model_and_processor(args)
     model = setup_lora(model, args)
 
@@ -703,7 +683,7 @@ def main() -> None:
         answer_max_length=args.target_answer_max_length,
     )
 
-    # ── Training args ──
+    # training args
     has_eval = eval_dataset is not None and len(eval_dataset) > 0
     load_best = has_eval and args.load_best_model_at_end
     eff_eval, eff_save, total_steps = resolve_eval_save_steps(args, len(train_dataset), load_best)
@@ -755,7 +735,7 @@ def main() -> None:
 
     training_args = TrainingArguments(**training_kwargs)
 
-    # ── Guardrail callback ──
+    # guardrail callback
     guardrail_cb = LossDivergenceGuardrailCallback(
         stop_on_nan_loss=args.stop_on_nan_loss,
         loss_guard_min_logs=args.loss_guard_min_logs,
@@ -801,7 +781,7 @@ def main() -> None:
     print(f"  Est. steps      : {total_steps}")
     print(f"{'='*60}\n")
 
-    # ── Train ──
+    # train
     train_metrics: Dict[str, Any] = {}
     train_interrupted = False
     try:
@@ -812,7 +792,7 @@ def main() -> None:
         train_metrics = {"guardrail_stop": str(exc)}
         print(f"Training stopped by guardrail: {exc}")
 
-    # ── Save ──
+    # save
     should_save = not guardrail_cb.fatal_stop
     if should_save:
         trainer.save_model(args.output_dir)
@@ -821,7 +801,7 @@ def main() -> None:
     else:
         print("\nSalvataggio saltato (fatal loss).")
 
-    # ── Training summary JSON ──
+    # training summary
     summary_path = Path(
         args.training_summary_json or
         str(Path(args.output_dir) / "training_summary.json")
@@ -867,7 +847,7 @@ def main() -> None:
     )
     print(f"Training summary: {summary_path}")
 
-    # ── S3 upload ──
+    # S3 upload
     print(f"\nUpload su S3: {args.s3_bucket}")
     os.system(f"aws s3 sync {args.output_dir} {args.s3_bucket} --region eu-west-1")
     print("Upload completato.")
