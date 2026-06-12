@@ -11,5 +11,5 @@ class Detection(Base):
     id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
     node_name: Mapped[str] = mapped_column(String(50), nullable=False)
     num_persone: Mapped[int] = mapped_column(Integer, nullable=False)
-    emotion: Mapped[str | None] = mapped_column(String(20), nullable=True)
+    emotion: Mapped[str | None] = mapped_column(String(50), nullable=True)
     timestamp: Mapped[int] = mapped_column(BigInteger, nullable=False)

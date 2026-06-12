@@ -12,7 +12,7 @@ router = APIRouter(prefix="/app", tags=["app"])
 
 DbDep = Annotated[AsyncSession, Depends(get_db)]
 
-_EMOTIONS = ["happiness", "neutral", "surprise", "distress"]
+_EMOTIONS = ["happiness", "neutral", "surprise", "sadness", "fear", "disgust", "contempt", "anger"]
 
 
 @router.get("/data/getbetweendates")
@@ -22,7 +22,6 @@ async def get_between_dates(
     end: int = Query(...),
     nodename: str = Query(...),
 ) -> dict:
-    """Return per-emotion occurrence counts for a node within a unix timestamp range."""
     result = await db.execute(
         select(Detection).where(
             Detection.node_name == nodename,
@@ -37,7 +36,13 @@ async def get_between_dates(
         if detection.emotion in counts:
             counts[detection.emotion] += 1
 
-    return {nodename: counts}
+    total = len(detections)
+    if total == 0:
+        percentages = {emotion: 0 for emotion in _EMOTIONS}
+    else:
+        percentages = {emotion: int(counts[emotion] / total * 100) for emotion in _EMOTIONS}
+
+    return {nodename: percentages}
 
 
 @router.post("/askagent", response_model=AskAgentResponse)

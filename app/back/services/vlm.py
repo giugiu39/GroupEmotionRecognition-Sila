@@ -5,7 +5,7 @@ from dotenv import load_dotenv
 load_dotenv()
 
 _VLM_URL = os.getenv("VLM_URL", "http://localhost:8001/predict")
-_VALID_EMOTIONS = {"happiness", "neutral", "surprise", "distress"}
+_VALID_EMOTIONS = {"happiness", "neutral", "surprise", "sadness", "fear", "disgust", "contempt", "anger"}
 
 
 async def classify_emotion(image_bytes: bytes, filename: str = "image.jpg") -> str | None:
