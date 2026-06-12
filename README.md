@@ -14,49 +14,49 @@ The system captures facial images from visitor groups at Parco Nazionale della S
 ## System Architecture
 
 ```
- ┌─────────────────────────────────────────────────────────────────────────────┐
- │  EDGE                                                                       │
- │                                                                             │
- │  ┌──────────────────────┐                                                   │
- │  │  Raspberry Pi 4       │  JPEG frame (REST/HTTPS)                        │
- │  │  USB camera           │ ──────────────────────────────────────────────► │
- │  │  (capture + compress) │                                                  │
- │  └──────────────────────┘                                                   │
- └─────────────────────────────────────────────────────────────────────────────┘
-                                        │
-                                        ▼
- ┌─────────────────────────────────────────────────────────────────────────────┐
- │  CLOUD (AWS eu-west-1)                                                      │
- │                                                                             │
- │  ┌──────────────────┐     ┌───────────────────────────────────────────────┐ │
- │  │  API Gateway     │────►│  Lambda                                       │ │
- │  │  (HTTPS endpoint)│     │  (routing, auth, S3 upload, job dispatch)     │ │
- │  └──────────────────┘     └───────────────────┬───────────────────────────┘ │
- │                                               │                             │
- │                                               ▼                             │
- │                           ┌───────────────────────────────────────────────┐ │
- │                           │  EC2 g4dn.xlarge                              │ │
- │                           │  NVIDIA Tesla T4 — 16 GB VRAM                 │ │
- │                           │  VLM inference:                               │ │
- │                           │    • PaliGemma 2 3B                           │ │
- │                           │    • MiniCPM-V 2.6                            │ │
- │                           │    • Moondream2                               │ │
- │                           └───────────────────┬───────────────────────────┘ │
- │                                               │                             │
- │                    ┌──────────────────────────┴──────────────────────────┐  │
- │                    │                                                     │  │
- │                    ▼                                                     ▼  │
- │        ┌────────────────────┐                              ┌───────────────┐ │
- │        │  DynamoDB          │                              │  S3           │ │
- │        │  (emotion results) │                              │  (raw images) │ │
- │        └────────────────────┘                              └───────────────┘ │
- │                    │                                                        │
- │                    ▼                                                        │
- │        ┌────────────────────────────────────────┐                          │
- │        │  Flutter Mobile App                    │                          │
- │        │  (real-time group emotion dashboard)   │                          │
- │        └────────────────────────────────────────┘                          │
- └─────────────────────────────────────────────────────────────────────────────┘
+┌─────────────────────────────────────────────────────────────────────────────┐
+│  EDGE                                                                       │
+│                                                                             │
+│  ┌──────────────────────┐                                                   │
+│  │  Raspberry Pi 4       │  JPEG frame (REST/HTTPS)                        │
+│  │  USB camera           │ ──────────────────────────────────────────────► │
+│  │  (capture + compress) │                                                  │
+│  └──────────────────────┘                                                   │
+└─────────────────────────────────────────────────────────────────────────────┘
+                                       │
+                                       ▼
+┌─────────────────────────────────────────────────────────────────────────────┐
+│  CLOUD (AWS eu-west-1)                                                      │
+│                                                                             │
+│  ┌──────────────────┐                                                       │
+│  │  API Gateway     │                                                       │
+│  │  + Cognito auth  │                                                       │
+│  └────────┬─────────┘                                                       │
+│           │                                                                 │
+│           ▼                                                                 │
+│  ┌──────────────────────────────────────────────────────────────────────┐   │
+│  │  EC2 g4dn.xlarge (same instance)                                     │   │
+│  │                                                                      │   │
+│  │  ┌─────────────────────┐     ┌──────────────────────────────────┐   │   │
+│  │  │  FastAPI backend    │────►│  VLM inference server            │   │   │
+│  │  │  (port 8000)        │     │  (separate process, port 8001)   │   │   │
+│  │  └─────────┬───────────┘     └──────────────────────────────────┘   │   │
+│  │            │                                                         │   │
+│  │            ▼                                                         │   │
+│  │  ┌─────────────────────┐                                             │   │
+│  │  │  MySQL              │                                             │   │
+│  │  │  (localhost:3306)   │                                             │   │
+│  │  └─────────────────────┘                                             │   │
+│  └──────────────────────────────────────────────────────────────────────┘   │
+│                                                                             │
+│  ┌──────────────────┐      ┌────────────────────────────────────────┐       │
+│  │  S3              │      │  Flutter Mobile App                    │       │
+│  │  (scripts,       │      │  (group emotion dashboard)             │       │
+│  │   datasets,      │      └────────────────────────────────────────┘       │
+│  │   model artefacts│                                                       │
+│  │   for EC2)       │                                                       │
+│  └──────────────────┘                                                       │
+└─────────────────────────────────────────────────────────────────────────────┘
 ```
 
 ---
@@ -78,6 +78,8 @@ The system captures facial images from visitor groups at Parco Nazionale della S
 .
 ├── README.md
 ├── .gitignore
+├── app/
+│   └── back/           # FastAPI backend
 ├── vlm/
 │   ├── paligemma2/     # PaliGemma 2 3B — fine-tuning & evaluation
 │   ├── minicpmv/       # MiniCPM-V 2.6 — fine-tuning & evaluation
@@ -153,9 +155,11 @@ Grouping sadness / anger / disgust / fear / contempt into a single `distress` cl
 |-----------|---------------|
 | Instance type | `g4dn.xlarge` |
 | GPU | NVIDIA Tesla T4 — 16 GB VRAM |
-| Storage | EBS gp3 + S3 (`s3://dimesvlm-data/`) |
-| Database | AWS DynamoDB |
-| Routing & auth | API Gateway + Lambda |
+| Storage | EBS gp3 + S3 (scripts, datasets, model artefacts) |
+| Database | MySQL (on EC2, localhost:3306) |
+| Routing & auth | API Gateway + Cognito |
+| Backend | FastAPI (port 8000) |
+| VLM server | Separate process (port 8001) |
 | Region | `eu-west-1` |
 
 ---
