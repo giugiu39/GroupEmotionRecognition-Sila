@@ -46,9 +46,9 @@ async def get_between_dates(
 
 
 @router.post("/askagent", response_model=AskAgentResponse)
-async def ask_agent(payload: AskAgentRequest, db: DbDep) -> AskAgentResponse:
+async def ask_agent(payload: AskAgentRequest) -> AskAgentResponse:
     try:
-        reply = await run_agent(payload.messages, db)
+        reply = await run_agent(payload.messages)
         return AskAgentResponse(response=reply)
     except Exception as exc:
         raise HTTPException(status_code=500, detail=str(exc))
