@@ -7,7 +7,7 @@ University of Calabria (UNICAL) — A.Y. 2025/2026
 
 ## Project Overview
 
-The system captures facial images from visitor groups at Parco Nazionale della Sila using a Raspberry Pi 4 edge device and classifies the group emotion in real-time through a cloud inference pipeline powered by Vision-Language Models (VLMs). Classified emotions are persisted to AWS DynamoDB and S3 and surfaced through a Flutter mobile application used by park staff.
+The system captures facial images from visitor groups at Parco Nazionale della Sila using a Raspberry Pi 4 edge device and classifies the group emotion in real-time through a cloud inference pipeline powered by Vision-Language Models (VLMs). Classified emotions are persisted to MySQL and surfaced through a Flutter mobile application used by park staff.
 
 ---
 
@@ -43,10 +43,10 @@ The system captures facial images from visitor groups at Parco Nazionale della S
 │  │  └─────────┬───────────┘     └──────────────────────────────────┘   │   │
 │  │            │                                                         │   │
 │  │            ▼                                                         │   │
-│  │  ┌─────────────────────┐                                             │   │
-│  │  │  MySQL              │                                             │   │
-│  │  │  (localhost:3306)   │                                             │   │
-│  │  └─────────────────────┘                                             │   │
+│  │  ┌─────────────────────┐     ┌──────────────────────────────────┐   │   │
+│  │  │  MySQL              │     │  AI Agent                        │   │   │
+│  │  │  (localhost:3306)   │     │  (text-to-SQL)                   │   │   │
+│  │  └─────────────────────┘     └──────────────────────────────────┘   │   │
 │  └──────────────────────────────────────────────────────────────────────┘   │
 │                                                                             │
 │  ┌──────────────────┐      ┌────────────────────────────────────────┐       │
@@ -79,14 +79,14 @@ The system captures facial images from visitor groups at Parco Nazionale della S
 ├── README.md
 ├── .gitignore
 ├── app/
-│   └── back/           # FastAPI backend
+│   └── back/           # backend
 ├── vlm/
 │   ├── paligemma2/     # PaliGemma 2 3B — fine-tuning & evaluation
 │   ├── minicpmv/       # MiniCPM-V 2.6 — fine-tuning & evaluation
 │   └── moondream2/     # Moondream2 — fine-tuning & evaluation
 ├── dataset/            # FER+ JSONL builders and dataset split files
 ├── edge/               # Raspberry Pi 4 capture script
-├── cloud/              # AWS Lambda function
+├── cloud/              # AWS cloud configuration
 └── docs/               # Project report and documentation
 ```
 
